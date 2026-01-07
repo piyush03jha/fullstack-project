@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import User from "../modles/user.js"
-
+import speakeasy from "speakeasy"
+import jwt from "jsonwebtoken"
+import qrCode from "qrcode"
 
 export const register = async (req, res) => {
     try{
@@ -24,13 +26,82 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     console.log("The authenticated user is :", req.user);
     res.status(200).json({
-        message: "User logged n successfully",
+        message: "User logged in successfully",
         username: req.user.username,
         isMfaActive: req.user.isMfaActive,
     })
 };
-export const authStatus = async () => {};
-export const logout = async () => {};
-export const setup2Fa = async () => {};
-export const verify2Fa = async () => {};
-export const reset2Fa = async () => {};
+export const authStatus = async (req, res) => {
+    if (req.user){
+        res.status(200).json({
+            message: "User logged in successfully",
+            username: req.user.username,
+            isMfaActive: req.user.isMfaActive,
+        })
+    } else {
+        res.status(401).json({message: "Unauthorized user"})
+    }
+};
+export const logout = async (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized user"})
+    req.logout((err) => {
+        if(err) return res.status(400).json({message: "User not logged in"})
+        res.status(200).json({ message: "Logout successfull"})
+})
+};
+export const setup2Fa = async (req, res) => {
+    try{
+        console.log("The req.user is: ", req.user);
+        const secret = speakeasy.generateSecret();
+        console.log("The secret object is", secret);
+        req.user.twoFactorSecret = secret.base32;
+        req.user.isMfaActive = true
+        await req.user.save();
+        const url = speakeasy.otpauthURL({
+            secret: secret.base32,
+            label: `${req.user.username}`,
+            issuer: "www.piyushjha.com",
+            encoding: "base32",
+        })
+        const qrImageUrl = await qrCode.toDataURL(url);
+        res.status(200).json({
+            secret: secret.basae,
+            qrCode: qrImageUrl,
+        })
+
+    }catch(error){
+        res.status(500) .json({error: "Error setting up 2FA", message: error,})
+    }
+};
+export const verify2Fa = async (req, res) => {
+    const {token} = req.body;
+    const user = req.user;
+
+    const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: "base32",
+        token,
+    })
+
+    if(verified) {
+        const jwtToken = jwt.sign(
+            {username: user.username},
+            process.env.JWT_SECRET,
+            { expiresIn: "1hr"}
+        );
+        res.status(200).json({ message: "2fa successfully", token: jwtToken})  
+    } else {
+        res.status(400).json({ message : "Invalid 2FA token"})
+    }
+};
+export const reset2Fa = async (req, res) => {
+    try{
+        const user = req.user;
+        user.twoFactorSecret = "";
+        user.isMfaActive = false;
+        await user.save();
+        res.status(200).json({ message: "2FA reset successfully"})
+    } catch(error){
+        res.status(500).json({ error: "Error reseting 2FA", message: error})
+    }
+};

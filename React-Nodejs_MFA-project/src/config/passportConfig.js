@@ -1,7 +1,8 @@
 import passport from "passport";
 import {Strategy as LocalStrategy} from "passport-local";
 import bcrypt from "bcryptjs";
-import User from "../models/user.js";
+import User from '../modles/user.js';
+
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -17,3 +18,18 @@ passport.use(
         }
   }
 ));
+
+passport.serializeUser((user, done) => {
+    console.log("We are inside serializeUser");
+    done(null, user._id)
+})
+
+passport.deserializeUser(async (_id, done) => {
+    try{
+        console.log("We are inside deserializeUser");
+        const user = await User.findById(_id);
+        done(null, user)
+    } catch (error){
+        done(error)
+    }
+})

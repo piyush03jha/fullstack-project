@@ -16,12 +16,24 @@ router.get("/status", authStatus);
 router.post("/logout", logout);
 
 //2FA setup
-router.post("/2fa/setup", setup2Fa)
+router.post("/2fa/setup",
+    (req, res, next) => {
+        if(req.isAuthenticated()) return next();
+        res.status(401).json({message: "Unauthorized"})
+    }, setup2Fa)
 
 //verify Route
-router.post("/2fa/verify", verify2Fa)
+router.post("/2fa/verify",
+    (req, res, next) => {
+        if(req.isAuthenticated()) return next();
+        res.status(401).json({message: "Unauthorized"})
+    }, verify2Fa)
 
 //reset Route
-router.post("/2fa/reset", reset2Fa)
+router.post("/2fa/reset",
+    (req, res, next) => {
+        if(req.isAuthenticated()) return next();
+        res.status(401).json({message: "Unauthorized"})
+    }, reset2Fa)
 
 export default router;
