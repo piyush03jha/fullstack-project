@@ -44,10 +44,20 @@ export const authStatus = async (req, res) => {
 };
 export const logout = async (req, res) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized user"})
-    req.logout((err) => {
-        if(err) return res.status(400).json({message: "User not logged in"})
-        res.status(200).json({ message: "Logout successfull"})
+    req.logout((err) =>{
+        if(err){
+            return next(err);
+        }
+        req.session.destroy((err) => {
+            if(err){
+                return next(err)
+            }
+            //clear cookie
+            res.clearCookie("connect.sid")
+            res.status(200).json({message: "logged out successfully"})
+        })
 })
+        
 };
 export const setup2Fa = async (req, res) => {
     try{
@@ -65,7 +75,7 @@ export const setup2Fa = async (req, res) => {
         })
         const qrImageUrl = await qrCode.toDataURL(url);
         res.status(200).json({
-            secret: secret.basae,
+            secret: secret.base32,
             qrCode: qrImageUrl,
         })
 

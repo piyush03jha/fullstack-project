@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     },
     isMfaActive: {
         type: Boolean,
-        require: false,
+        required: false,
     },
     twoFactorSecret:{
         type: String,

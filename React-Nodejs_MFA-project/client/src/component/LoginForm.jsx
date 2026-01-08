@@ -18,6 +18,7 @@ const LoginForm = ({onLoginSuccess}) => {
             setUsername("")
             setPassword("")
             onLoginSuccess(data);
+            setError("")
 
         } catch (error) {
             console.log("The Error is ",error.message);
@@ -25,6 +26,8 @@ const LoginForm = ({onLoginSuccess}) => {
             setUsername("");
             setPassword("");
             setConfirmPassword("")
+            setMessage("")
+
         }
 
     }
@@ -38,12 +41,14 @@ const LoginForm = ({onLoginSuccess}) => {
             setUsername("");
             setPassword("");
             setConfirmPassword("")
+            setError("")
         } catch (error) {
             console.log("The Error is ",error.message);
             setError("Something went wrong during user registration. Please try again.");
             setUsername("");
             setPassword("");
             setConfirmPassword("")
+            setMessage("")
         }
     }
 
