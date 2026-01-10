@@ -46,11 +46,11 @@ export const logout = async (req, res) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized user"})
     req.logout((err) =>{
         if(err){
-            return next(err);
+            return res.status(500).json({ message: "Error logging out" });
         }
         req.session.destroy((err) => {
             if(err){
-                return next(err)
+                return res.status(500).json({ message: "Error logging out" });
             }
             //clear cookie
             res.clearCookie("connect.sid")

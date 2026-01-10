@@ -1,5 +1,5 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
+import { authStatus, logoutUser } from "../service/authApi";
 
 const SessionContext = createContext();
 
@@ -11,26 +11,35 @@ export const SessionProvider = ({ children }) => {
     const [user, setUser] = useState(null)
 
     useEffect(() => {
-        const storedUser = JSON.parse(sessionStorage.getItem("user"));
-        console.log("the UseEffect runs : ", storedUser);
-        if (storedUser) {
-            setIsLoggedIn(true);
-            setUser(storedUser);
-        }
-        setLoading(false);
+        const checkAuthStatus = async () => {
+            try {
+                const { data } = await authStatus();
+                setIsLoggedIn(true);
+                setUser(data);
+            } catch (error) {
+                setIsLoggedIn(false);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkAuthStatus();
+        const interval = setInterval(checkAuthStatus, 5 * 60 * 1000); // Check every 5 minutes
+        return () => clearInterval(interval);
     }, []);
             
     
     const login = (userData) => {
         setIsLoggedIn(true)
         setUser(userData)
-        sessionStorage.setItem("user", JSON.stringify(userData));
     }
-    const logout = (data) => {
-        if (data) {
+    const logout = async () => {
+        try {
+            await logoutUser();
             setIsLoggedIn(false);
             setUser(null);
-            sessionStorage.removeItem("user");
+        } catch (error) {
+            console.error("Failed to logout", error);
         }
     }
     return(

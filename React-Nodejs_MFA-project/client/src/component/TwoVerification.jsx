@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { verify2FA, reset2FA } from "../service/authApi";
 
 const TwoVerification = ({ onVerifySuccess , onResetSuccess }) => {
   const [otp, setOtp] = useState("");
@@ -7,12 +8,12 @@ const TwoVerification = ({ onVerifySuccess , onResetSuccess }) => {
   const handleTokenVerification = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await verify2FAToken(otp);
+      const { data } = await verify2FA(otp);
       onVerifySuccess(data)
     } catch (error) {
       setOtp("");
       setError("Invalid TOTP entered. Please try again.");
-      console.log("The err is: ", error.message);
+      console.log("The err is: ", error);
       
     }
   }
